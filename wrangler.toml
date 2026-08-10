@@ -1,6 +1,7 @@
-name = "link-manager-new"
+name = "linkhub"
 main = "src/server/worker.ts"
 compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
 
 [assets]
 directory = "public"
@@ -11,7 +12,7 @@ binding = "LINKS_KV"
 id = "d77e8fd888de414c891b9e1df3c9609a"
 
 [vars]
-APP_URL = "http://localhost:8787"
+APP_URL = "https://linkhub.luochancy.com"
 WP_LINKS_URL = "https://www.luochancy.com/wp-json/link-manager/v1/links"
 WP_AUTH_MODE = "application-password"
 SESSION_TTL = "604800"
