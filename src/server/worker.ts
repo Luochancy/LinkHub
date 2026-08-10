@@ -1,10 +1,10 @@
 import { Elysia } from 'elysia'
-import { CloudflareAdapter } from 'elysia/adapter/cloudflare-worker'
+import { WebStandardAdapter } from 'elysia/adapter/web-standard'
 import { env } from 'cloudflare:workers'
 import { createApp } from './app'
 import { kvStore } from './kv-store'
 
-const workerApp = new Elysia({ adapter: CloudflareAdapter })
+const workerApp = new Elysia({ adapter: WebStandardAdapter, aot: false })
   .mount(createApp(env, kvStore(env.LINKS_KV)).fetch)
   .compile()
 
