@@ -4,7 +4,7 @@ import { env } from 'cloudflare:workers'
 import { createApp } from './app'
 import { kvStore } from './kv-store'
 
-const workerApp = new Elysia({ adapter: CloudflareAdapter, aot: false })
+const workerApp = new Elysia({ adapter: CloudflareAdapter })
   .mount(createApp(env, kvStore(env.LINKS_KV)).fetch)
   .compile()
 
