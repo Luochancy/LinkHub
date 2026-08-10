@@ -1,0 +1,35 @@
+:root {
+  font-family: Roboto, "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  color: rgb(var(--v-theme-on-background));
+  background: rgb(var(--v-theme-background));
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body { margin: 0; min-width: 320px; background: rgb(var(--v-theme-background)); }
+#app { min-height: 100vh; }
+.v-application { background: rgb(var(--v-theme-background)) !important; }
+.v-main { min-height: calc(100vh - 64px); }
+.app-brand-link { color: inherit; text-decoration: none; display: flex; align-items: center; border-radius: 12px; }
+.app-brand-link:focus-visible { outline: 3px solid rgba(var(--v-theme-primary), .28); outline-offset: 3px; }
+  .app-brand { flex: 0 0 auto !important; min-width: 0; max-width: 160px; overflow: visible !important; white-space: nowrap; }
+  .brand-icon { width: 28px; height: 28px; vertical-align: middle; margin-right: 8px; }
+.app-user { flex: 0 1 auto; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 600px) { .app-brand { max-width: 140px; } }
+.page-title { letter-spacing: -0.02em; }
+.surface-container { background: rgb(var(--v-theme-surface-container)); }
+.v-card { border-color: rgb(var(--v-theme-outline-variant)) !important; }
+.admin-page .stats-row > .v-col { padding-top: 0; padding-bottom: 0; }
+.stats-row .v-card { min-height: 104px; border: 1px solid rgb(var(--v-theme-outline-variant)) !important; }
+.stats-row .text-h5 { font-size: 2rem !important; line-height: 1.2; }
+.filters-card .v-row { margin: -8px; }
+.filters-card .v-col { padding: 8px; }
+.filters-card .v-field { border-radius: 12px; }
+.links-card .v-list-item { min-height: 88px; padding-inline: 20px; }
+.links-card .v-list-item + .v-list-item { border-top: 1px solid rgb(var(--v-theme-outline-variant)); }
+.links-card .v-list-item__append { gap: 2px; }
+@media (max-width: 600px) {
+  .links-card .v-list-item { padding-inline: 12px; }
+  .links-card .v-list-item__append .v-chip { display: none; }
+}
+.v-btn:focus-visible, .v-field:focus-within { outline: 3px solid rgba(var(--v-theme-primary), .28); outline-offset: 2px; }

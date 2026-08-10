@@ -1,0 +1,17 @@
+name = "link-manager-new"
+main = "src/server/worker.ts"
+compatibility_date = "2025-06-01"
+
+[assets]
+directory = "public"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "LINKS_KV"
+id = "d77e8fd888de414c891b9e1df3c9609a"
+
+[vars]
+APP_URL = "http://localhost:8787"
+WP_LINKS_URL = "https://www.luochancy.com/wp-json/link-manager/v1/links"
+WP_AUTH_MODE = "application-password"
+SESSION_TTL = "604800"
