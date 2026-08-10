@@ -20,5 +20,6 @@ const root = join(fileURLToPath(new URL('../../public', import.meta.url)))
 const mime: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' }
 const assets = { fetch: async (request: Request) => { const url = new URL(request.url); const requested = url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\//, ''); try { const file = await readFile(join(root, requested)); return new Response(file, { headers: { 'Content-Type': mime[extname(requested)] || 'application/octet-stream' } }) } catch { try { const file = await readFile(join(root, 'index.html')); return new Response(file, { headers: { 'Content-Type': 'text/html; charset=utf-8' } }) } catch { return new Response('Build the frontend first', { status: 404 }) } } } }
 const store = localStore(join(fileURLToPath(new URL('../../data', import.meta.url)), 'links.json'))
-new Elysia({ adapter: node() }).mount(createApp({ ASSETS: assets }, store).fetch).listen(port)
+const runtime = { ...process.env, ASSETS: assets }
+new Elysia({ adapter: node() }).mount(createApp(runtime, store).fetch).listen(port)
 console.log(`Link Manager running at http://localhost:${port}`)

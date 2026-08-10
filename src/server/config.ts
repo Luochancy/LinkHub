@@ -3,7 +3,7 @@ export type RuntimeEnv = Record<string, any> & {
 }
 
 export function getEnv(name: string, runtime?: RuntimeEnv) {
-  return runtime?.[name] ?? (typeof process !== 'undefined' ? process.env[name] : undefined)
+  return runtime?.[name]
 }
 
 export function requiredEnv(name: string, runtime?: RuntimeEnv) {
