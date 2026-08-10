@@ -2,14 +2,21 @@ import { appUrl, getEnv, type RuntimeEnv } from './config'
 import { readState, sessionCookie, stateCookie, type User } from './session'
 
 export async function githubAuthorize(runtime: RuntimeEnv, set: any) {
-  const clientId = getEnv('GITHUB_CLIENT_ID', runtime)
-  if (!clientId) { set.status = 500; return { error: '未配置 GitHub OAuth' } }
-  const state = crypto.randomUUID()
-  set.headers['Set-Cookie'] = await stateCookie(state, runtime)
-  const redirect = getEnv('GITHUB_REDIRECT_URI', runtime) || `${appUrl(runtime)}/api/auth/callback`
-  const url = new URL('https://github.com/login/oauth/authorize')
-  url.searchParams.set('client_id', clientId); url.searchParams.set('redirect_uri', redirect); url.searchParams.set('scope', 'read:user'); url.searchParams.set('state', state)
-  set.status = 302; set.headers.Location = url.toString(); return ''
+  try {
+    const clientId = getEnv('GITHUB_CLIENT_ID', runtime)
+    if (!clientId) { set.status = 500; return { error: '未配置 GitHub OAuth' } }
+    const state = crypto.randomUUID()
+    set.headers['Set-Cookie'] = await stateCookie(state, runtime)
+    const redirect = getEnv('GITHUB_REDIRECT_URI', runtime) || `${appUrl(runtime)}/api/auth/callback`
+    const url = new URL('https://github.com/login/oauth/authorize')
+    url.searchParams.set('client_id', clientId); url.searchParams.set('redirect_uri', redirect); url.searchParams.set('scope', 'read:user'); url.searchParams.set('state', state)
+    set.status = 302; set.headers.Location = url.toString(); return ''
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error)
+    console.error('GitHub OAuth authorize failed:', detail)
+    set.status = 500
+    return { error: 'GitHub OAuth 初始化失败', detail }
+  }
 }
 
 export async function githubCallback(request: Request, code: string | undefined, state: string | undefined, runtime: RuntimeEnv, set: any) {
