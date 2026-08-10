@@ -5,13 +5,26 @@ export type User = { id: string; login: string; name?: string; avatar?: string }
 const COOKIE = 'link_session'
 const STATE_COOKIE = 'link_oauth_state'
 
-const encode = (value: string) => btoa(unescape(encodeURIComponent(value))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
-const decode = (value: string) => decodeURIComponent(escape(atob(value.replace(/-/g, '+').replace(/_/g, '/'))))
+function base64UrlEncode(bytes: Uint8Array) {
+  let binary = ''
+  for (const byte of bytes) binary += String.fromCharCode(byte)
+  return btoa(binary).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+}
+
+function base64UrlDecode(value: string) {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
+  const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4)
+  const binary = atob(padded)
+  return Uint8Array.from(binary, char => char.charCodeAt(0))
+}
+
+const encode = (value: string) => base64UrlEncode(new TextEncoder().encode(value))
+const decode = (value: string) => new TextDecoder().decode(base64UrlDecode(value))
 
 async function signature(value: string, secret: string) {
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify'])
   const bytes = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value))
-  return encode(String.fromCharCode(...new Uint8Array(bytes)))
+  return base64UrlEncode(new Uint8Array(bytes))
 }
 
 async function seal(value: string, runtime?: RuntimeEnv) {
