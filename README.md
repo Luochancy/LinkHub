@@ -13,6 +13,8 @@
 
 ## WordPress 约定
 
+需提前下载源码当中的`link-manager-api-flat.zip`通过WP的插件管理上传安装以实现WP侧的功能实现。
+
 `WP_LINKS_URL` 需要指向项目附带的 WordPress 插件接口：
 
 ```text
