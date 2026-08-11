@@ -1,0 +1,22 @@
+name = "linkhub"
+main = "src/server/worker.ts"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[routes]]
+pattern = "linkhub.example.com"
+custom_domain = true
+
+[assets]
+directory = "public"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "LINKS_KV"
+id = "11451411919810"
+
+[vars]
+APP_URL = "https://linkhub.example.com"
+WP_LINKS_URL = "https://www.example.com/wp-json/link-manager/v1/links"
+WP_AUTH_MODE = "application-password"
+SESSION_TTL = "604800"

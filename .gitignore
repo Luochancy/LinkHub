@@ -3,3 +3,6 @@ node_modules
 .env.local
 public/assets
 data
+.xdg
+.wrangler
+wrangler.toml
