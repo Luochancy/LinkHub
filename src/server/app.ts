@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia'
+import { WebStandardAdapter } from 'elysia/adapter/web-standard'
 import { appUrl, adminIds, adminLogins, type RuntimeEnv } from './config'
 import { githubAuthorize, githubCallback } from './auth'
 import { clearSessionCookie, readSession } from './session'
@@ -8,7 +9,10 @@ import { makeLink, type LinkRecord } from './store'
 import { validateLinkUrls } from './url-validation'
 
 export function createApp(runtime: RuntimeEnv = {}, store: LinkStore) {
-  const app = new Elysia({ name: 'link-manager' })
+  // Cloudflare Workers disallow Elysia's Function-based AOT compiler.  The
+  // application is also mounted by the Worker entrypoint, so this inner app
+  // must use the same interpreter-based Web Standard handler.
+  const app = new Elysia({ name: 'link-manager', adapter: WebStandardAdapter, aot: false })
     .onError(({ code, error, set }) => { if (code === 'NOT_FOUND') return; set.status = 500; return { error: error instanceof Error ? error.message : '服务器错误' } })
     .get('/api/health', () => ({ ok: true }))
     .get('/api/auth/github', ({ set }) => githubAuthorize(runtime, set))
