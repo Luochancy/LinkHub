@@ -126,12 +126,14 @@ npm run deploy
 
 ## Cloudflare 配置要点
 
-项目的 Worker 入口是 src/server/worker.ts，正式配置文件是 wrangler.toml。仓库里同时提供了 wrangler.toml.example，作用是给你一个可直接复制后修改的模板，便于在不同环境中快速部署。
+项目的 Worker 入口是 src/server/worker.ts，正式配置文件是 wrangler.toml。仓库里提供的 wrangler.toml 仅作为模板示例，需要你简单的填入部分信息，便于在不同环境中快速部署。
+
+请注意，如果为公开仓库请不要在此填入机密信息，以防相关信息泄露。
 
 ### 需要配置的内容
 
 - Worker 入口：src/server/worker.ts
-- Worker 配置：wrangler.toml（可先从 wrangler.toml.example 复制）
+- Worker 配置：wrangler.toml
 - KV 绑定：LINKS_KV
 - 静态资源目录：public/
 
