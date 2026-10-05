@@ -157,12 +157,27 @@ npm run e2e:live    # 打真实 HTTP 接口，校验鉴权边界与字段白名�
 
 ## Cloudflare 配置要点
 
-项目的 Worker 入口是 src/server/worker.ts。仓库中提供的是 wrangler.toml.example 模板，
-请复制为 wrangler.toml 并填入自己的 KV namespace id、域名等信息；wrangler.toml 本身
-已被 .gitignore 忽略，避免把个人基建信息（KV id、自定义域名）提交到公开仓库。
+项目的 Worker 入口是 `src/server/worker.ts`。`wrangler.toml` 必须提交到版本库，
+否则 Cloudflare Git Builds 只能看到 Vite 的 `public/` 目录，会把项目识别成“只有静态
+资产的 Worker”。这种部署没有 `/api` 后端，也无法使用 GitHub 登录或读取友情链接，
+并会在添加运行时变量时报“不能将变量添加到只有静态资产的 Worker”。
+
+`wrangler.toml.example` 可作为新部署的模板。实际配置中的 Worker 入口、assets binding
+和 KV binding 应保留在 `wrangler.toml`。KV namespace ID、域名和公开接口地址不是认证
+凭据，可以进入版本控制；密码、OAuth Client Secret 和 SESSION_SECRET 不得写入该文件。
 
 所有敏感项请使用 `wrangler secret put` 或 Cloudflare Dashboard 的 Secret 配置，
 不要写进 wrangler.toml 的 [vars]。
+
+### Cloudflare Git Builds
+
+- Build command：`npm run build`
+- Deploy command：`npx wrangler deploy`
+- 不要使用只上传 `public/` 的 Pages/静态站点部署命令。
+- `wrangler.toml` 中的 `main = "src/server/worker.ts"` 与 `[assets] binding = "ASSETS"`
+  必须同时存在；`keep_vars = true` 会保留 Dashboard 中已有的变量和 Secrets。
+- 首次部署脚本后，在 Worker 的 **Settings → Variables and Secrets** 中配置所需 Secrets。
+- GitHub OAuth App 的 callback URL 必须为 `${APP_URL}/api/auth/callback`。
 
 ### 需要配置的内容
 
@@ -196,5 +211,4 @@ npm run e2e:live    # 打真实 HTTP 接口，校验鉴权边界与字段白名�
 - 本地开发默认使用 data/links.json 作为数据存储；线上部署会使用 Cloudflare KV。
 - 如果你只想先跑通前端和后端流程，可以先不配置 WordPress 同步，接口仍可正常使用。
 - 由于前端资产会被构建到 public/，首次启动前请确保已经执行过构建或使用 npm run dev。
-
 
