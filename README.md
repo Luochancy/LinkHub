@@ -163,11 +163,13 @@ npm run e2e:live    # 打真实 HTTP 接口，校验鉴权边界与字段白名�
 并会在添加运行时变量时报“不能将变量添加到只有静态资产的 Worker”。
 
 `wrangler.toml.example` 可作为新部署的模板。实际配置中的 Worker 入口、assets binding
-和 KV binding 应保留在 `wrangler.toml`。KV namespace ID、域名和公开接口地址不是认证
-凭据，可以进入版本控制；密码、OAuth Client Secret 和 SESSION_SECRET 不得写入该文件。
+和 KV binding 应保留在 `wrangler.toml`。KV namespace ID 和域名不是认证凭据，可以进入
+版本控制；运行时变量、密码、OAuth Client Secret 和 SESSION_SECRET 均不写入该文件。
 
-所有敏感项请使用 `wrangler secret put` 或 Cloudflare Dashboard 的 Secret 配置，
-不要写进 wrangler.toml 的 [vars]。
+所有运行时变量和敏感项都由 Cloudflare Dashboard 的 Variables and Secrets 管理。
+不要在 `wrangler.toml` 中添加 `[vars]`：即使启用了 `keep_vars = true`，配置文件中
+明确声明的同名值仍会在部署时覆盖 Dashboard 中的值。Secret 也可以使用
+`wrangler secret put` 配置。
 
 ### Cloudflare Git Builds
 
@@ -175,7 +177,9 @@ npm run e2e:live    # 打真实 HTTP 接口，校验鉴权边界与字段白名�
 - Deploy command：`npx wrangler deploy`
 - 不要使用只上传 `public/` 的 Pages/静态站点部署命令。
 - `wrangler.toml` 中的 `main = "src/server/worker.ts"` 与 `[assets] binding = "ASSETS"`
-  必须同时存在；`keep_vars = true` 会保留 Dashboard 中已有的变量和 Secrets。
+  必须同时存在。
+- `keep_vars = true` 只保留 **未在 `wrangler.toml` 声明** 的 Dashboard 变量；项目因此
+  故意不使用 `[vars]`，避免自动部署覆盖控制台配置。
 - 首次部署脚本后，在 Worker 的 **Settings → Variables and Secrets** 中配置所需 Secrets。
 - GitHub OAuth App 的 callback URL 必须为 `${APP_URL}/api/auth/callback`。
 
@@ -211,4 +215,3 @@ npm run e2e:live    # 打真实 HTTP 接口，校验鉴权边界与字段白名�
 - 本地开发默认使用 data/links.json 作为数据存储；线上部署会使用 Cloudflare KV。
 - 如果你只想先跑通前端和后端流程，可以先不配置 WordPress 同步，接口仍可正常使用。
 - 由于前端资产会被构建到 public/，首次启动前请确保已经执行过构建或使用 npm run dev。
-

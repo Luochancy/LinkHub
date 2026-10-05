@@ -17,8 +17,5 @@ binding = "ASSETS"
 binding = "LINKS_KV"
 id = "d77e8fd888de414c891b9e1df3c9609a"
 
-[vars]
-APP_URL = "https://linkhub.luochancy.com"
-WP_LINKS_URL = "https://www.luochancy.com/wp-json/link-manager/v1/links"
-WP_AUTH_MODE = "application-password"
-SESSION_TTL = "604800"
+# 运行时变量和 Secrets 全部在 Cloudflare Dashboard 中维护。
+# 请勿在此添加 [vars]：同名配置会在部署时覆盖 Dashboard 中已有的值。
