@@ -17,6 +17,8 @@ name = "linkhub"
 main = "src/server/worker.ts"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]
+# 保留 Cloudflare Dashboard 中配置的变量和 Secrets。
+keep_vars = true
 
 [[routes]]
 # 改成你自己的域名，或删除此段以使用 <worker>.<account>.workers.dev

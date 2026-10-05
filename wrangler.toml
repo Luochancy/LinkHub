@@ -1,0 +1,24 @@
+name = "linkhub"
+main = "src/server/worker.ts"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
+# 保留 Cloudflare Dashboard 中配置的变量和 Secrets。
+keep_vars = true
+
+[[routes]]
+pattern = "linkhub.luochancy.com"
+custom_domain = true
+
+[assets]
+directory = "public"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "LINKS_KV"
+id = "d77e8fd888de414c891b9e1df3c9609a"
+
+[vars]
+APP_URL = "https://linkhub.luochancy.com"
+WP_LINKS_URL = "https://www.luochancy.com/wp-json/link-manager/v1/links"
+WP_AUTH_MODE = "application-password"
+SESSION_TTL = "604800"

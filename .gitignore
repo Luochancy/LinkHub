@@ -6,5 +6,5 @@ public
 data
 .xdg
 .wrangler
-# 部署配置含个人基建信息（KV namespace id、自定义域名），只提交 wrangler.toml.example
-wrangler.toml
+# wrangler.toml 必须提交：Cloudflare Git Builds 依赖它识别 Worker 入口。
+# 密钥仍通过 Dashboard 或 `wrangler secret put` 配置，不得写入该文件。
