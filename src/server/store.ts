@@ -19,8 +19,21 @@ export type LinkRecord = {
 
 export type LinkStore = {
   list(): Promise<LinkRecord[]>
+  /** 按 id 读取单条记录，避免为一次编辑扫描整张表。 */
+  get(id: string): Promise<LinkRecord | null>
   put(link: LinkRecord): Promise<void>
   delete(id: string): Promise<void>
+  /** 可选：是否还有旧版单 blob 数据待迁移。 */
+  legacyStatus?(): Promise<{ pending: boolean }>
+  /** 可选：把旧版单 blob 数据迁移为新格式，升级后手动执行一次。 */
+  migrateLegacy?(): Promise<MigrationResult>
+}
+
+export type MigrationResult = {
+  imported: number
+  skipped: number
+  alreadyMigrated: boolean
+  completed: boolean
 }
 
 export function makeLink(data: Partial<LinkRecord> & Pick<LinkRecord, 'name' | 'url'>): LinkRecord {

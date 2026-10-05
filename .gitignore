@@ -1,7 +1,10 @@
 node_modules
 .env
 .env.local
-public/assets
+# public/ 是 `vite build` 的输出目录（源文件在 static/ 和 index.html），不应提交
+public
 data
 .xdg
 .wrangler
+# 部署配置含个人基建信息（KV namespace id、自定义域名），只提交 wrangler.toml.example
+wrangler.toml

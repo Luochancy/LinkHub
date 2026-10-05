@@ -3,11 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k \"vite build --watch\" \"tsx src/server/node.ts\"",
-    "dev:server": "tsx watch src/server/node.ts",
+    "dev": "ALLOW_EPHEMERAL_SESSION_SECRET=true concurrently -k \"vite build --watch\" \"tsx src/server/node.ts\"",
+    "dev:server": "ALLOW_EPHEMERAL_SESSION_SECRET=true tsx watch src/server/node.ts",
     "build": "vite build && tsc --noEmit",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "verify": "tsx scripts/verify-hardening.ts && tsx scripts/regress-dev-secret.ts",
+    "typecheck": "tsc --noEmit",
+    "e2e:live": "tsx scripts/e2e-live.ts"
   },
   "dependencies": {
     "@elysia/node": "latest",
