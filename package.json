@@ -1,6 +1,7 @@
 {
   "name": "link-manager-new",
   "private": true,
+  "license": "GPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "icons": "node scripts/gen-icons.mjs",
