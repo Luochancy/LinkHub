@@ -3,20 +3,25 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k \"vite build --watch\" \"tsx src/server/node.ts\"",
-    "dev:server": "tsx watch src/server/node.ts",
+    "icons": "node scripts/gen-icons.mjs",
+    "prebuild": "npm run icons",
+    "dev": "ALLOW_EPHEMERAL_SESSION_SECRET=true concurrently -k \"vite build --watch\" \"tsx src/server/node.ts\"",
+    "dev:server": "ALLOW_EPHEMERAL_SESSION_SECRET=true tsx watch src/server/node.ts",
     "build": "vite build && tsc --noEmit",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "verify": "tsx scripts/verify-hardening.ts && tsx scripts/regress-dev-secret.ts && tsx scripts/verify-icons.ts",
+    "typecheck": "tsc --noEmit",
+    "e2e:live": "tsx scripts/e2e-live.ts"
   },
   "dependencies": {
     "@elysia/node": "latest",
     "@elysiajs/eden": "latest",
+    "@mdi/js": "^7.4.47",
     "elysia": "latest",
     "vue": "latest",
     "vue-router": "latest",
-    "vuetify": "^4.0.0",
-    "@mdi/font": "latest"
+    "vuetify": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "latest",

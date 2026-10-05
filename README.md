@@ -22,11 +22,13 @@
 src/
   client/          # Vue 前端页面与组件
   server/          # Elysia API、认证、WordPress 同步逻辑
-wordpress-plugin/  # WordPress 插件源码
+link-manager-api/  # WordPress 插件源码
 link-manager-api-flat.zip
                     # 可直接上传到 WordPress 的插件压缩包
-data/             # 本地开发数据（JSON）
-public/           # 前端构建产物，部署时由 Worker 提供静态资源
+data/             # 本地开发数据（JSON，未提交）
+scripts/          # 验证脚本
+public/           # 前端构建产物（由 npm run build / dev 生成，未提交）
+wrangler.toml.example  # 部署配置模板（wrangler.toml 本身不提交）
 ```
 
 ## 核心功能
@@ -35,14 +37,14 @@ public/           # 前端构建产物，部署时由 Worker 提供静态资源
 
 - 首页展示已公开友链
 - 登录后提交新的友链申请
-- 查看并删除自己名下的友链
+- 查看、编辑和删除自己名下的友链（编辑已通过的友链会重新进入待审核，并在 WordPress 上先下架）
 
 ### 管理侧
 
 - 查看全部、待审核、无主友链
 - 审核通过或隐藏链接
 - 编辑链接内容并同步回 WordPress
-- 从 WordPress 批量导入历史链接
+- 从 WordPress 批量导入历史链接（跳过本地有未同步改动的记录，避免被旧数据覆盖）
 - 删除链接并同步删除 WordPress 中的记录
 
 ## WordPress 插件与接口
@@ -50,7 +52,7 @@ public/           # 前端构建产物，部署时由 Worker 提供静态资源
 本项目依赖内置插件提供 WordPress 侧接口。请先在 WordPress 后台安装插件：
 
 1. 直接上传根目录下的 link-manager-api-flat.zip 并启用
-2. 或使用 wordpress-plugin/link-manager-api.php 自行打包部署
+2. 或使用 link-manager-api/link-manager-api.php 自行打包部署
 
 接口基地址示例：
 
@@ -86,14 +88,21 @@ WP_USERNAME=
 WP_APPLICATION_PASSWORD=
 ADMIN_GITHUB_IDS=
 ADMIN_GITHUB_LOGINS=
-SESSION_SECRET=change-me
+SESSION_SECRET=
 ```
 
 说明：
 
 - ADMIN_GITHUB_IDS / ADMIN_GITHUB_LOGINS 支持逗号分隔多个管理员
 - WP_USERNAME + WP_APPLICATION_PASSWORD 用于服务端同步 WordPress
-- SESSION_SECRET 建议使用高强度随机字符串
+- SESSION_SECRET 用于签名会话与 OAuth state。**未配置时服务会直接报错**（fail-closed），
+  不会回退到公开的默认密钥；密钥至少 16 个字符，且不能使用默认开发值。
+  生成方式：`openssl rand -base64 32`。
+  本地开发可以不配置：Node 入口会自动改用内置开发密钥，而 Cloudflare Worker 入口没有这段
+  回退逻辑，因此生产环境必须显式配置。这样就不存在「一个环境变量开关配错就导致线上可用
+  公开密钥伪造会话」的风险。
+- 生产环境请在 Cloudflare 用 Secret 配置 SESSION_SECRET、GITHUB_CLIENT_SECRET、
+  WP_APPLICATION_PASSWORD 等敏感项。
 
 ## 本地开发
 
@@ -117,18 +126,43 @@ npm run dev 会同时启动：
 ## 构建与部署
 
 ```bash
+npm run typecheck   # TypeScript 检查
+npm run verify      # 加固项 + 图标流水线验证（无需启动服务）
 npm run build
 npm run deploy
+```
+
+- build 前会自动执行 `npm run icons`，重新生成 `src/client/icons.ts`
+
+验证真实服务（需先 `npm run dev`）：
+
+```bash
+npm run e2e:live    # 打真实 HTTP 接口，校验鉴权边界与字段白名单
 ```
 
 - build：执行前端构建并进行 TypeScript 检查
 - deploy：在 build 完成后使用 Wrangler 发布到 Cloudflare Workers
 
+## 图标
+
+界面图标通过内联 SVG 渲染，不使用图标字体。
+
+- `scripts/gen-icons.mjs` 扫描 `src/client/` 中出现的 `mdi-*` 名称，只从 `@mdi/js`
+  导入这些图标，生成 `src/client/icons.ts`（**自动生成，请勿手工编辑**）。
+- 生成器在遇到 `@mdi/js` 中不存在对应名称时**直接报错退出**，因此模板里写错的
+  图标名会在构建阶段暴露，而不是静默渲染成空白。
+- 新增图标只需在模板中使用 `mdi-xxx`，构建时会自动纳入。
+- `npm run verify` 会校验：所有引用的图标都已生成、字体依赖未被重新引入、
+  构建产物中不含字体文件，以及生成器确实会在未知图标名时报错。
+
 ## Cloudflare 配置要点
 
-项目的 Worker 入口是 src/server/worker.ts，正式配置文件是 wrangler.toml。仓库里提供的 wrangler.toml 仅作为模板示例，需要你简单的填入部分信息，便于在不同环境中快速部署。
+项目的 Worker 入口是 src/server/worker.ts。仓库中提供的是 wrangler.toml.example 模板，
+请复制为 wrangler.toml 并填入自己的 KV namespace id、域名等信息；wrangler.toml 本身
+已被 .gitignore 忽略，避免把个人基建信息（KV id、自定义域名）提交到公开仓库。
 
-请注意，如果为公开仓库请不要在此填入机密信息，以防相关信息泄露。
+所有敏感项请使用 `wrangler secret put` 或 Cloudflare Dashboard 的 Secret 配置，
+不要写进 wrangler.toml 的 [vars]。
 
 ### 需要配置的内容
 

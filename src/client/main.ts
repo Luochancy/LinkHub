@@ -1,9 +1,10 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import 'vuetify/styles'
-import '@mdi/font/css/materialdesignicons.css'
 import './styles.css'
 import { createVuetify } from 'vuetify'
+import { mdi } from './icons'
+import { isAdminUser, loadAuth, currentUser, rememberRedirect } from './auth'
 import App from './App.vue'
 import Home from './views/Home.vue'
 import Login from './views/Login.vue'
@@ -15,10 +16,32 @@ const router = createRouter({ history: createWebHistory(), routes: [
   { path: '/', component: Home }, { path: '/login', component: Login },
   { path: '/mine', component: Mine, meta: { auth: true } },
   { path: '/submit', component: Submit, meta: { auth: true } },
-  { path: '/admin', component: Admin, meta: { auth: true } }
+  { path: '/admin', component: Admin, meta: { auth: true, admin: true } }
 ]})
 
+// These routes declared `meta.auth`, but nothing enforced it: the flags were dead
+// metadata and protected views mounted before the session was known, so a signed-out
+// visitor briefly saw an empty page (and /admin rendered for non-admins before its
+// own fetch failed). Resolving the session here fixes both; because loadAuth()
+// de-duplicates in-flight calls this costs no extra round trip.
+router.beforeEach(async (to) => {
+  if (!to.meta.auth) return true
+  await loadAuth()
+  if (!currentUser.value) {
+    // The OAuth callback always returns to `/`, so the intended destination is
+    // stashed in sessionStorage rather than passed as a query parameter.
+    rememberRedirect(to.fullPath)
+    return { path: '/login' }
+  }
+  if (to.meta.admin && !isAdminUser.value) return { path: '/' }
+  return true
+})
+
 const vuetify = createVuetify({
+  icons: {
+    defaultSet: 'mdi',
+    sets: { mdi }
+  },
   theme: {
     defaultTheme: 'light',
     themes: {

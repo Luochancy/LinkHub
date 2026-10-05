@@ -94,53 +94,95 @@ const filteredLinks = computed(() => links.value.filter(link => {
   return (statusFilter.value === 'all' || link.status === statusFilter.value) && (!query.value || text.includes(query.value.toLowerCase()))
 }))
 
-async function json(response: Response) { return response.json().catch(() => ({})) }
+/**
+ * 统一请求入口：网络异常返回 ok=false 而不是抛出，
+ * 否则按钮会一直卡在 loading 状态。
+ */
+async function send(url: string, init?: RequestInit) {
+  try {
+    const response = await fetch(url, init)
+    const data = await response.json().catch(() => ({}))
+    return { ok: response.ok, data: data as any }
+  } catch {
+    return { ok: false, data: { error: '网络请求失败，请检查网络后重试' } }
+  }
+}
+function jsonInit(method: string, body?: unknown): RequestInit {
+  return { method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) }
+}
+
 async function load(clearMessage = true) {
   loading.value = true
-  const response = await fetch('/api/admin/links')
-  const data = await json(response)
-  if (!response.ok) { error.value = true; message.value = data.error || '读取管理数据失败' } else { links.value = data.links || []; if (clearMessage) { message.value = ''; error.value = false } }
-  loading.value = false
+  try {
+    const { ok, data } = await send('/api/admin/links')
+    if (!ok) { error.value = true; message.value = data.error || '读取管理数据失败'; return }
+    links.value = data.links || []
+    if (clearMessage) { message.value = ''; error.value = false }
+  } finally {
+    loading.value = false
+  }
 }
+
 async function importLinks() {
   importing.value = true
-  const response = await fetch('/api/admin/import', { method: 'POST' })
-  const data = await json(response)
-  importing.value = false
-  error.value = !response.ok
-  message.value = response.ok ? `导入完成：发现 ${data.total} 条，新增 ${data.added} 条，更新 ${data.updated || 0} 条` : (data.error || '导入失败')
+  try {
+    const { ok, data } = await send('/api/admin/import', { method: 'POST' })
+    error.value = !ok
+    message.value = ok
+      ? `导入完成：发现 ${data.total} 条，新增 ${data.added} 条，更新 ${data.updated || 0} 条，跳过 ${data.skipped || 0} 条`
+      : (data.error || '导入失败')
+  } finally {
+    importing.value = false
+  }
   await load(false)
 }
+
 async function decide(link: any, visible: boolean) {
-  const response = await fetch(`/api/admin/${link.id}/visibility`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ visible }) })
-  if (response.ok) { message.value = visible ? '链接已通过并同步到 WordPress' : '链接已隐藏'; error.value = false; await load() } else { const data = await json(response); error.value = true; message.value = data.error || '操作失败' }
+  const { ok, data } = await send(`/api/admin/${link.id}/visibility`, jsonInit('POST', { visible }))
+  if (!ok) { error.value = true; message.value = data.error || '操作失败'; return }
+  await load(false)
+  if (data.link?.syncStatus === 'failed') { error.value = true; message.value = `状态已保存，但 WordPress 同步失败：${data.link.syncError || ''}` }
+  else { error.value = false; message.value = visible ? '链接已通过并同步到 WordPress' : '链接已隐藏' }
 }
-async function removeLink(link: any) {
-  deleteLink.value = link
-  deleteOpen.value = true
-}
+
+function removeLink(link: any) { deleteLink.value = link; deleteOpen.value = true }
+
 async function confirmRemove() {
   if (!deleteLink.value) return
-  deleting.value = true
   const link = deleteLink.value
-  const response = await fetch(`/api/admin/${link.id}`, { method: 'DELETE' })
-  const data = await json(response)
-  deleting.value = false
-  if (!response.ok) { error.value = true; message.value = data.error || '删除失败'; return }
-  deleteOpen.value = false
-  deleteLink.value = null
-  error.value = false; message.value = `已删除「${link.name}」`; await load(false)
+  deleting.value = true
+  try {
+    const { ok, data } = await send(`/api/admin/${link.id}`, { method: 'DELETE' })
+    if (!ok) { error.value = true; message.value = data.error || '删除失败'; return }
+    deleteOpen.value = false
+    deleteLink.value = null
+    error.value = false
+    message.value = `已删除「${link.name}」`
+  } finally {
+    deleting.value = false
+  }
+  await load(false)
 }
+
 function openEdit(link: any) { Object.assign(editForm, { id: link.id, name: link.name, url: link.url, avatar: link.avatar || '', githubId: link.ownerGithubId || '', description: link.description || '' }); editOpen.value = true }
+
 async function saveEdit() {
   saving.value = true
-  const response = await fetch(`/api/admin/${editForm.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editForm) })
-  const data = await json(response)
-  saving.value = false
-  if (!response.ok) { error.value = true; message.value = data.error || '保存失败'; return }
-  editOpen.value = false; error.value = data.link?.syncStatus === 'failed'; message.value = error.value ? `本地已保存，但 WordPress 同步失败：${data.link.syncError || ''}` : '已保存并同步到 WordPress'; await load(false)
+  try {
+    const { ok, data } = await send(`/api/admin/${editForm.id}`, jsonInit('PUT', editForm))
+    if (!ok) { error.value = true; message.value = data.error || '保存失败'; return }
+    if (!data.link) { error.value = true; message.value = '保存失败：服务端未返回数据'; return }
+    editOpen.value = false
+    if (data.link.syncStatus === 'failed') { error.value = true; message.value = `本地已保存，但 WordPress 同步失败：${data.link.syncError || ''}` }
+    else { error.value = false; message.value = '已保存并同步到 WordPress' }
+  } finally {
+    saving.value = false
+  }
+  await load(false)
 }
+
 function statusText(status: string) { return status === 'approved' ? '已公开' : status === 'pending' ? '待审核' : '已隐藏' }
 function statusColor(status: string) { return status === 'approved' ? 'success' : status === 'pending' ? 'warning' : 'grey' }
 onMounted(load)
 </script>
+

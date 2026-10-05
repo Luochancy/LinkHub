@@ -1,0 +1,40 @@
+# 部署模板：请复制为 wrangler.toml 后填入自己的值，不要把个人基建信息提交进仓库。
+#
+# 必填：
+#   - routes[].pattern               你的自定义域名（或删除 [[routes]] 使用 workers.dev）
+#   - kv_namespaces[].id             `wrangler kv namespace create LINKS_KV` 的输出
+#   - vars.APP_URL                   站点公开地址
+#   - vars.WP_LINKS_URL              WordPress 插件接口地址
+#
+# 密钥不要写在这里（本文件会进版本库），用 `wrangler secret put` 配置：
+#   wrangler secret put SESSION_SECRET       # 必填，openssl rand -base64 32
+#   wrangler secret put GITHUB_CLIENT_ID
+#   wrangler secret put GITHUB_CLIENT_SECRET
+#   wrangler secret put WP_APPLICATION_PASSWORD
+#   wrangler secret put ADMIN_GITHUB_IDS
+
+name = "linkhub"
+main = "src/server/worker.ts"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[routes]]
+# 改成你自己的域名，或删除此段以使用 <worker>.<account>.workers.dev
+pattern = "example.com"
+custom_domain = true
+
+[assets]
+# 源文件在 index.html / static/，`npm run build` 后产物在 public/
+directory = "public"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "LINKS_KV"
+# 替换为 `wrangler kv namespace create LINKS_KV` 返回的 id
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+[vars]
+APP_URL = "https://example.com"
+WP_LINKS_URL = "https://example.com/wp-json/link-manager/v1/links"
+WP_AUTH_MODE = "application-password"
+SESSION_TTL = "604800"

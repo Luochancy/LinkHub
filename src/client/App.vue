@@ -15,10 +15,32 @@
   </v-app>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-const user = ref<any>(null)
-const isAdmin = ref(false)
-async function load() { const data = await fetch('/api/auth/me').then(r => r.json()); user.value = data.user; isAdmin.value = Boolean(data.isAdmin) }
-async function logout() { await fetch('/api/auth/logout', { method: 'POST' }); user.value = null; location.href = '/' }
-onMounted(load)
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { consumeRedirect, currentUser, isAdminUser, loadAuth, logout as clearSession } from './auth'
+
+const user = currentUser
+const isAdmin = isAdminUser
+const router = useRouter()
+
+async function logout () {
+  await clearSession()
+  // Full reload drops any cached view state belonging to the old session.
+  location.href = '/'
+}
+
+onMounted(async () => {
+  await loadAuth()
+  await router.isReady()
+  // The OAuth callback always lands on `/`; forward the user to wherever they
+  // were headed before signing in. Consuming only here (after a *successful*
+  // auth and only on the landing route) matters: consuming earlier discarded the
+  // destination whenever the session was still unknown — e.g. refreshing /login,
+  // or an auth request failing on the OAuth return — and would also hijack an
+  // explicit navigation to another route.
+  if (currentUser.value && router.currentRoute.value.path === '/') {
+    const target = consumeRedirect()
+    if (target) await router.replace(target)
+  }
+})
 </script>
