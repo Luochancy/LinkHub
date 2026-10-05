@@ -4,6 +4,8 @@
  * Description: Exposes the classic WordPress Links/Link Manager data for Link Hub.
  * Version: 1.0.4
  * Author: Luochancy
+ * License: GPL-3.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  */
 if (!defined('ABSPATH')) exit;
 

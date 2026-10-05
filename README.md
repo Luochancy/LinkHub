@@ -190,4 +190,4 @@ npm run start        # 运行已构建的本地 Node 服务
 
 # License
 
-请根据仓库中的许可证文件使用本项目；如果仓库尚未提供许可证，默认保留全部权利。
+LinkHub（包括配套 WordPress 插件）采用 **GNU General Public License v3.0 or later**（`GPL-3.0-or-later`）发布，完整条款见 [LICENSE](LICENSE)。
