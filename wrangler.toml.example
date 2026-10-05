@@ -3,10 +3,11 @@
 # 必填：
 #   - routes[].pattern               你的自定义域名（或删除 [[routes]] 使用 workers.dev）
 #   - kv_namespaces[].id             `wrangler kv namespace create LINKS_KV` 的输出
-#   - vars.APP_URL                   站点公开地址
-#   - vars.WP_LINKS_URL              WordPress 插件接口地址
+#   - 在 Cloudflare Dashboard 中填写 APP_URL、WP_LINKS_URL 等运行时变量
 #
-# 密钥不要写在这里（本文件会进版本库），用 `wrangler secret put` 配置：
+# 运行时变量和密钥都不要写在这里（本文件会进版本库），请在
+# Cloudflare Dashboard → Settings → Variables and Secrets 中配置。
+# 也可以用 `wrangler secret put` 配置 Secret：
 #   wrangler secret put SESSION_SECRET       # 必填，openssl rand -base64 32
 #   wrangler secret put GITHUB_CLIENT_ID
 #   wrangler secret put GITHUB_CLIENT_SECRET
@@ -35,8 +36,5 @@ binding = "LINKS_KV"
 # 替换为 `wrangler kv namespace create LINKS_KV` 返回的 id
 id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 
-[vars]
-APP_URL = "https://example.com"
-WP_LINKS_URL = "https://example.com/wp-json/link-manager/v1/links"
-WP_AUTH_MODE = "application-password"
-SESSION_TTL = "604800"
+# 运行时变量和 Secrets 全部在 Cloudflare Dashboard 中维护。
+# 请勿在此添加 [vars]：同名配置会在部署时覆盖 Dashboard 中已有的值。

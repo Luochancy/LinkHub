@@ -10,7 +10,7 @@
     "build": "vite build && tsc --noEmit",
     "preview": "vite preview",
     "deploy": "npm run build && wrangler deploy",
-    "verify": "tsx scripts/verify-hardening.ts && tsx scripts/regress-dev-secret.ts && tsx scripts/verify-icons.ts",
+    "verify": "tsx scripts/verify-hardening.ts && tsx scripts/regress-dev-secret.ts && tsx scripts/verify-icons.ts && node scripts/verify-wrangler.mjs",
     "typecheck": "tsc --noEmit",
     "e2e:live": "tsx scripts/e2e-live.ts"
   },
