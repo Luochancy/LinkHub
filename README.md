@@ -127,10 +127,12 @@ npm run dev 会同时启动：
 
 ```bash
 npm run typecheck   # TypeScript 检查
-npm run verify      # 加固项针对性验证（86 项断言，无需启动服务）
+npm run verify      # 加固项 + 图标流水线验证（无需启动服务）
 npm run build
 npm run deploy
 ```
+
+- build 前会自动执行 `npm run icons`，重新生成 `src/client/icons.ts`
 
 验证真实服务（需先 `npm run dev`）：
 
@@ -140,6 +142,18 @@ npm run e2e:live    # 打真实 HTTP 接口，校验鉴权边界与字段白名�
 
 - build：执行前端构建并进行 TypeScript 检查
 - deploy：在 build 完成后使用 Wrangler 发布到 Cloudflare Workers
+
+## 图标
+
+界面图标通过内联 SVG 渲染，不使用图标字体。
+
+- `scripts/gen-icons.mjs` 扫描 `src/client/` 中出现的 `mdi-*` 名称，只从 `@mdi/js`
+  导入这些图标，生成 `src/client/icons.ts`（**自动生成，请勿手工编辑**）。
+- 生成器在遇到 `@mdi/js` 中不存在对应名称时**直接报错退出**，因此模板里写错的
+  图标名会在构建阶段暴露，而不是静默渲染成空白。
+- 新增图标只需在模板中使用 `mdi-xxx`，构建时会自动纳入。
+- `npm run verify` 会校验：所有引用的图标都已生成、字体依赖未被重新引入、
+  构建产物中不含字体文件，以及生成器确实会在未知图标名时报错。
 
 ## Cloudflare 配置要点
 
